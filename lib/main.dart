@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:solarcontrol/ui/settings.dart';
+
 import 'ui/control.dart';
 import 'ui/analyze.dart';
 
@@ -74,8 +75,9 @@ class _SolarTabState extends State<SolarTab> with TickerProviderStateMixin {
         appBar: currentAppBar(context),
         body: TabBarView(
           controller: _tabController,
+          physics: NeverScrollableScrollPhysics(),
           children: <Widget>[
-            ControlWidget(),
+            ControlWidget(context),
             AnalyzeWidget(),
           ],
         ));

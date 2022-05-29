@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:solarcontrol/contexts/globalContext.dart';
 
 Widget SettingsBluetoothWidget(context) {
+  globalContext bsvc = globalContext();
   return Scaffold(
     appBar: AppBar(
       title: const Text("Bluetooth"),
@@ -18,12 +20,11 @@ class BlueToothSearchWidget extends StatefulWidget {
 }
 
 class _BlueToothSearchWidgetState extends State<BlueToothSearchWidget> {
-  FlutterBlue flutterBlue = FlutterBlue.instance;
-  List<BluetoothDevice> bluetoothDevices = <BluetoothDevice>[];
+  globalContext bsvc = globalContext();
   _addDeviceTolist(final BluetoothDevice device) {
-    if (!bluetoothDevices.contains(device)) {
+    if (!bsvc.bluetoothDevices.contains(device)) {
       setState(() {
-        bluetoothDevices.add(device);
+        bsvc.bluetoothDevices.add(device);
       });
     }
   }
@@ -31,34 +32,43 @@ class _BlueToothSearchWidgetState extends State<BlueToothSearchWidget> {
   @override
   void initState() {
     super.initState();
-    flutterBlue.connectedDevices
+    bsvc.flutterBlue.connectedDevices
         .asStream()
         .listen((List<BluetoothDevice> devices) {
       for (BluetoothDevice device in devices) {
         _addDeviceTolist(device);
       }
     });
-    flutterBlue.scanResults.listen((results) {
-      setState(() {
-        for (ScanResult result in results) {
-          _addDeviceTolist(result.device);
-        }
-      });
-    });
-    flutterBlue.startScan(timeout: Duration(seconds: 5));
+
+    // bsvc.flutterBlue.scanResults.listen((results) {
+    //   setState(() {
+    //     for (ScanResult result in results) {
+    //       _addDeviceTolist(result.device);
+    //       print('${result.device.name} found! rssi: ${result.rssi}');
+    //     }
+    //     print('result found ${results.length}');
+    //   });
+    // });
+    // bsvc.flutterBlue.startScan(
+    //     timeout: Duration(seconds: 25), scanMode: ScanMode.lowLatency);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: <Widget>[
-        ...bluetoothDevices.map(
-          (device) => ListTile(
-            title: Text(device.name),
-            subtitle: Text(device.id.toString()),
-          ),
-        )
-      ],
-    );
+    return RefreshIndicator(
+        child: ListView.builder(
+            itemBuilder: (ctx, idx) {
+              var device = bsvc.bluetoothDevices[idx];
+              return ListTile(
+                title: Text(device.name),
+                subtitle: Text(device.id.toString()),
+              );
+            },
+            itemCount: bsvc.bluetoothDevices.length),
+        onRefresh: () async {
+          // bsvc.flutterBlue.startScan(timeout: Duration(seconds: 5));
+
+          return Future<void>.delayed(const Duration(seconds: 5));
+        });
   }
 }
